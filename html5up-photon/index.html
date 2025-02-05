@@ -11,7 +11,7 @@
 
 <!-- Header -->
 <section id="header">
-    <div class="inner">
+    <div class="inner"> 
         <span class="icon solid major fa-laptop"></span>
         <h1>Welcome to <strong>Infinity IT Services</strong></h1>
         <p>Your reliable partner for innovative IT solutions and support.</p>
@@ -117,6 +117,27 @@
                 </div>
             </div>
             <script>
+                document.getElementById('blog-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    try {
+        const formData = new FormData(this);
+        const response = await fetch('infinity_blog.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Unknown error');
+        }
+
+        await loadPosts();
+        this.reset();
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+});
                 document.querySelector('form').addEventListener('submit', async function(event) {
                     event.preventDefault();
                     
@@ -162,6 +183,8 @@
 <script src="assets/js/main.js"></script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', loadPosts); // Load posts when the page is loaded
+
     document.getElementById('blog-form').addEventListener('submit', function(event) {
         event.preventDefault();
         
@@ -193,17 +216,53 @@
                 postElement.appendChild(video);
             }
         }
-        
+
         // Append the new post to the blog posts section
         document.getElementById('blog-posts').prepend(postElement);
+
+        // Save the post to local storage
+        savePost(title, content, mediaURL);
 
         // Clear the form fields
         document.getElementById('post-title').value = '';
         document.getElementById('post-content').value = '';
         document.getElementById('post-media').value = '';
     });
+
+    function savePost(title, content, mediaURL) {
+        let posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+        posts.push({ title, content, mediaURL });
+        localStorage.setItem('blogPosts', JSON.stringify(posts));
+    }
+
+    function loadPosts() {
+        let posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+        posts.forEach(post => {
+            const postElement = document.createElement('div');
+            postElement.classList.add('blog-post');
+            postElement.innerHTML = `<h3>${post.title}</h3><p>${post.content}</p>`;
+            
+            if (post.mediaURL) {
+                const mediaType = post.mediaURL.startsWith('data:image/') ? 'image' : 'video';
+                if (mediaType === 'image') {
+                    const img = document.createElement('img');
+                    img.src = post.mediaURL;
+                    img.alt = post.title;
+                    img.style.maxWidth = '100%';
+                    postElement.appendChild(img);
+                } else {
+                    const video = document.createElement('video');
+                    video.src = post.mediaURL;
+                    video.controls = true;
+                    video.style.maxWidth = '100%';
+                    postElement.appendChild(video);
+                }
+            }
+
+            document.getElementById('blog-posts').prepend(postElement);
+        });
+    }
 </script>
 
 </body>
 </html>
-
